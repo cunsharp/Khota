@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="h-full bg-slate-50">
+<html lang="ar" dir="rtl" class="h-full bg-slate-100">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مُوَلِّد خطط الدروس الاحترافي | Lesson Plan Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>مُوَلِّد خُطَط الدروس الاحترافي | متوافق مع الهاتف والطباعة</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,27 +11,32 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Google Fonts: Cairo & Tajawal for Arabic Typographic Excellence -->
+  <!-- Google Fonts: Cairo -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-  
-  <!-- html2pdf.js for optional direct PDF stream -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
       font-family: 'Cairo', system-ui, -apple-system, sans-serif;
     }
-    
-    .font-tajawal {
-      font-family: 'Tajawal', sans-serif;
+
+    /* Prevent mobile input auto-zoom on iOS by keeping base font 16px */
+    @media (max-width: 640px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
     }
 
     /* Custom Scrollbars */
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
     }
     ::-webkit-scrollbar-track {
       background: #f1f5f9;
@@ -40,30 +45,57 @@
       background: #cbd5e1;
       border-radius: 9999px;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+
+    /* Dynamic Sheet Zoom on Mobile Preview */
+    .sheet-zoom-viewport {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+      min-height: 100%;
+      transform-origin: top center;
+      transition: transform 0.15s ease-out;
     }
 
-    /* Print & PDF Export Precision Styling */
+    /* Fixed A4 dimensions for accurate printable sheet simulation */
+    .a4-page {
+      width: 210mm;
+      min-height: 297mm;
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      margin: 0 auto;
+      padding: 12mm 15mm;
+    }
+
+    /* High Precision Print Stylesheet */
     @media print {
       @page {
         size: A4 portrait;
-        margin: 10mm 12mm 12mm 12mm;
+        margin: 8mm 10mm 10mm 10mm;
       }
       body {
-        background-color: #ffffff !important;
+        background: #ffffff !important;
         color: #000000 !important;
-        font-size: 11pt;
+        font-size: 10pt;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
-      .no-print {
+      .no-print, header, nav, #editorPanel, #mobileNav, .zoom-controls {
         display: none !important;
       }
-      .print-only {
+      #previewPanel {
         display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        overflow: visible !important;
       }
-      .printable-sheet {
+      .sheet-zoom-viewport {
+        transform: none !important;
+      }
+      .a4-page {
         box-shadow: none !important;
         border: none !important;
         width: 100% !important;
@@ -71,21 +103,9 @@
         padding: 0 !important;
         margin: 0 !important;
       }
-      .page-break {
-        page-break-before: always;
-      }
       .keep-together {
         page-break-inside: avoid;
       }
-    }
-
-    /* Modal Animation */
-    @keyframes modalFadeIn {
-      from { opacity: 0; transform: scale(0.96) translateY(10px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-    .modal-animate {
-      animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
   </style>
 
@@ -95,14 +115,12 @@
         extend: {
           colors: {
             brand: {
-              50: '#eef6ff',
-              100: '#d9ebff',
-              200: '#bcdeff',
-              500: '#1e64eb',
-              600: '#0047cc',
-              700: '#0036a1',
-              800: '#002570',
-              900: '#00194d',
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af'
             }
           }
         }
@@ -113,224 +131,214 @@
 
 <body class="h-full flex flex-col overflow-hidden text-slate-800">
 
-  <!-- Top Navigation Bar -->
-  <header class="bg-white border-b border-slate-200 shadow-sm z-30 flex-shrink-0 no-print">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+  <header class="bg-white border-b border-slate-200 z-30 flex-shrink-0 no-print shadow-xs">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
       
-      <!-- Brand & Title -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
-          <i class="fa-solid fa-graduation-cap text-lg"></i>
+      <!-- Brand -->
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 flex-shrink-0">
+          <i class="fa-solid fa-graduation-cap text-base"></i>
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-lg font-bold text-slate-900 leading-tight">مُعَلِّمِي | صانع خطط الدروس</h1>
-            <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full border border-emerald-200">الإصدار التربوي</span>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-base sm:text-lg font-black text-slate-900 leading-tight">مُعَلِّمِي</h1>
+            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full">التربوي</span>
           </div>
-          <p class="text-xs text-slate-500 hidden sm:block">إعداد وطباعة خطط تعليمية وفق المعايير التربوية الحديثة وتصدير PDF</p>
+          <p class="text-[11px] text-slate-500 hidden sm:block">إعداد وطباعة خطط الدروس وفق المعايير</p>
         </div>
       </div>
 
-      <!-- Quick Action Controls -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <!-- AI Generator Button -->
-        <button id="openAiModalBtn" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
-          <i class="fa-solid fa-wand-magic-sparkles text-amber-300 animate-pulse"></i>
-          <span class="hidden md:inline">التوليد بالذكاء الاصطناعي</span>
-          <span class="md:hidden">توليد ذكي</span>
+      <!-- Center Mobile Mode Switcher (Visible on mobile/tablet) -->
+      <div class="flex lg:hidden bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+        <button id="mobileToggleEditBtn" class="px-3 py-1.5 rounded-lg bg-white text-brand-600 shadow-xs flex items-center gap-1">
+          <i class="fa-solid fa-pen-to-square"></i>
+          <span>المحرر</span>
+        </button>
+        <button id="mobileTogglePreviewBtn" class="px-3 py-1.5 rounded-lg text-slate-600 flex items-center gap-1">
+          <i class="fa-solid fa-file-lines"></i>
+          <span>المعاينة</span>
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button id="openAiModalBtn" class="flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-500/20 active:scale-95 transition">
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+          <span class="hidden sm:inline">توليد ذكي</span>
         </button>
 
-        <!-- View Mode Switcher on Desktop -->
-        <div class="hidden lg:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-medium">
-          <button id="viewSplitBtn" class="px-3 py-1.5 rounded-lg bg-white shadow-xs text-brand-600 font-bold transition-all">
+        <!-- Desktop Split Mode Controls -->
+        <div class="hidden lg:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+          <button id="desktopSplitBtn" class="px-3 py-1.5 rounded-lg bg-white shadow-xs text-brand-600 font-bold">
             <i class="fa-solid fa-table-columns ml-1"></i> مُقسَّم
           </button>
-          <button id="viewEditorBtn" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">
-            <i class="fa-solid fa-pen-to-square ml-1"></i> المحرر
+          <button id="desktopEditBtn" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">
+            <i class="fa-solid fa-pen ml-1"></i> المحرر فقط
           </button>
-          <button id="viewPreviewBtn" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">
-            <i class="fa-solid fa-file-pdf ml-1"></i> المعاينة
+          <button id="desktopPreviewBtn" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">
+            <i class="fa-solid fa-file-pdf ml-1"></i> المعاينة فقط
           </button>
         </div>
 
-        <!-- Export PDF Actions -->
-        <button id="printPdfBtn" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-brand-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]">
+        <button id="topPrintBtn" class="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/25 active:scale-95 transition">
           <i class="fa-solid fa-print"></i>
-          <span>طباعة / حفظ PDF</span>
+          <span class="hidden sm:inline">طباعة / PDF</span>
         </button>
       </div>
 
     </div>
   </header>
 
-  <!-- Multi-lesson Tab Bar -->
-  <section class="bg-slate-100 border-b border-slate-200 px-4 sm:px-6 py-2 flex items-center justify-between overflow-x-auto flex-shrink-0 no-print gap-3">
-    <div class="flex items-center gap-2 overflow-x-auto py-1" id="lessonsTabsContainer">
-      <!-- Tabs injected by JS -->
+  <section class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 flex items-center justify-between gap-2 overflow-x-auto flex-shrink-0 no-print">
+    <div class="flex items-center gap-1.5 overflow-x-auto py-0.5" id="lessonsTabsContainer">
+      <!-- Tabs rendered by JS -->
     </div>
     
-    <div class="flex items-center gap-2 flex-shrink-0">
-      <button id="addNewLessonBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-dashed border-slate-300 text-slate-700 hover:text-brand-600 text-xs font-semibold shadow-2xs transition">
-        <i class="fa-solid fa-plus text-brand-600"></i>
-        <span>إضافة درس جديد</span>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <button id="addNewLessonBtn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-brand-50 border border-slate-200 text-brand-600 hover:border-brand-300 text-xs font-bold transition">
+        <i class="fa-solid fa-plus"></i>
+        <span class="hidden sm:inline">درس جديد</span>
       </button>
 
-      <button id="loadSampleBtn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-800 bg-slate-200/70 hover:bg-slate-200 text-xs font-medium transition" title="تحميل نموذج درس مكتمل">
-        <i class="fa-solid fa-file-circle-check ml-1 text-emerald-600"></i>
-        <span>مثال تجريبي</span>
+      <button id="loadSampleBtn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-semibold transition" title="تحميل نموذج جاهز">
+        <i class="fa-solid fa-file-circle-check text-emerald-600"></i>
+        <span class="hidden sm:inline">نموذج تجريبي</span>
       </button>
 
-      <button id="resetLessonBtn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 text-xs font-medium transition" title="إفراغ بيانات الدرس الحالي">
+      <button id="resetLessonBtn" class="p-1.5 px-2.5 rounded-lg text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200 text-xs transition" title="إفراغ النموذج">
         <i class="fa-solid fa-rotate-left"></i>
       </button>
     </div>
   </section>
 
-  <!-- Main Workspace -->
   <main class="flex-1 flex overflow-hidden relative">
 
-    <!-- LEFT COLUMN: Editor Form Panel -->
-    <div id="editorPanel" class="w-full lg:w-1/2 h-full overflow-y-auto p-4 sm:p-6 bg-slate-50 border-l border-slate-200 transition-all duration-200 no-print">
-      <div class="max-w-2xl mx-auto space-y-6 pb-20">
-
-        <!-- Banner / Helper Tip -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/70 rounded-2xl p-4 flex items-start gap-3">
-          <div class="text-brand-600 text-lg mt-0.5"><i class="fa-solid fa-circle-info"></i></div>
-          <div class="text-xs text-slate-600 leading-relaxed">
-            <span class="font-bold text-slate-800">تلميح تربوي:</span> أدخل بيانات درسك بالأسفل وستنعكس مباشرة وبشكل حي على وثيقة الـ PDF الجاهزة للطباعة على اليسار. يمكنك إضافة دروس إضافية أو استخدام المساعد الذكي لتعبئة النموذج بضغطة زر واحدة.
-          </div>
-        </div>
+    <!-- LEFT PANEL: Editor Form -->
+    <div id="editorPanel" class="w-full lg:w-1/2 h-full overflow-y-auto p-3.5 sm:p-6 bg-slate-50 border-l border-slate-200 no-print pb-24 lg:pb-12 transition-all">
+      <div class="max-w-2xl mx-auto space-y-4 sm:space-y-6">
 
         <!-- Card 1: Basic Information -->
-        <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <i class="fa-solid fa-sliders text-brand-600"></i>
-              <span>أولاً: البيانات العامة للدرس</span>
-            </div>
-            <span class="text-[11px] text-slate-400 font-medium">الترويسة الرسمية</span>
+        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-chalkboard text-brand-600"></i>
+              <span>1. البيانات العامة للدرس</span>
+            </h2>
+            <span class="text-[11px] text-slate-400">الترويسة الإدارية</span>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">عنوان الدرس <span class="text-rose-500">*</span></label>
-              <input type="text" id="fieldTopic" placeholder="مثال: دورة الماء في الطبيعة" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">عنوان الدرس <span class="text-rose-500">*</span></label>
+              <input type="text" id="fieldTopic" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition" placeholder="مثال: دورة الماء في الطبيعة">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">المادة الدراسية <span class="text-rose-500">*</span></label>
-              <input type="text" id="fieldSubject" placeholder="مثال: العلوم العامة" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+              <label class="block text-xs font-bold text-slate-700 mb-1">المادة الدراسية</label>
+              <input type="text" id="fieldSubject" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition" placeholder="العلوم العامة">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">الصف / المرحلة</label>
-              <input type="text" id="fieldGrade" placeholder="مثال: الصف الخامس الابتدائي" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+              <label class="block text-xs font-bold text-slate-700 mb-1">الصف / المرحلة</label>
+              <input type="text" id="fieldGrade" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition" placeholder="الخامس الابتدائي">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">الوحدة التعليمية / الفصل</label>
-              <input type="text" id="fieldUnit" placeholder="مثال: الوحدة الثالثة - الأنظمة البيئية" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+              <label class="block text-xs font-bold text-slate-700 mb-1">الوحدة التعليمية</label>
+              <input type="text" id="fieldUnit" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition" placeholder="الوحدة الثالثة: كوكب الأرض">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">تاريخ الحصة</label>
-              <input type="date" id="fieldDate" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+              <label class="block text-xs font-bold text-slate-700 mb-1">الزمن المخصص</label>
+              <input type="text" id="fieldDuration" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition" placeholder="45 دقيقة">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">الزمن المخصص (دقيقة)</label>
-              <input type="text" id="fieldDuration" placeholder="45 دقيقة" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+              <label class="block text-xs font-bold text-slate-700 mb-1">تاريخ الحصة</label>
+              <input type="date" id="fieldDate" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المعلم / المعلمة</label>
-              <input type="text" id="fieldTeacher" placeholder="أ. أحمد السعيد" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+              <label class="block text-xs font-bold text-slate-700 mb-1">اسم المعلم / المعلمة</label>
+              <input type="text" id="fieldTeacher" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition" placeholder="أ. محمد أحمد">
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">المدرسة / الإدارة التعليمية</label>
-              <input type="text" id="fieldSchool" placeholder="مدرسة الأمل النموذجية" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">المدرسة / الإدارة</label>
+              <input type="text" id="fieldSchool" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition" placeholder="مدرسة الأمل النموذجية">
             </div>
           </div>
         </div>
 
-        <!-- Card 2: Learning Outcomes -->
-        <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
+        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
               <i class="fa-solid fa-bullseye text-rose-500"></i>
-              <span>ثانياً: نواتج التعلم والأهداف السلوكية (SMART)</span>
-            </div>
-            <button id="addObjectiveBtn" class="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1">
-              <i class="fa-solid fa-circle-plus"></i> إضافة هدف
+              <span>2. نواتج التعلم والأهداف السلوكية (SMART)</span>
+            </h2>
+            <button id="addObjectiveBtn" class="text-xs text-brand-600 hover:text-brand-700 font-bold flex items-center gap-1 px-2 py-1 rounded bg-brand-50">
+              <i class="fa-solid fa-plus"></i> إضافة هدف
             </button>
           </div>
 
           <div id="objectivesContainer" class="space-y-2.5">
-            <!-- Dynamic Objective Rows -->
+            <!-- Dynamic Objectives Rows -->
           </div>
         </div>
 
-        <!-- Card 3: Teaching Tools & Resources -->
-        <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <i class="fa-solid fa-toolbox text-amber-500"></i>
-              <span>ثالثاً: مصادر التعلم والوسائل التعليمية</span>
-            </div>
+        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-cubes text-amber-500"></i>
+              <span>3. مصادر التعلم والوسائل التعليمية</span>
+            </h2>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">الوسائل والأدوات المحسوسة</label>
-              <textarea id="fieldAids" rows="2" placeholder="الكتاب المدرسي، بطاقات ملونة، مجسمات، سبورة ذكية..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none"></textarea>
+              <label class="block text-xs font-bold text-slate-700 mb-1">الوسائل والأدوات المحسوسة</label>
+              <textarea id="fieldAids" rows="2" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none" placeholder="الكتاب المدرسي، بطاقات ملونة، مجسمات..."></textarea>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">التقنيات والمصادر الرقمية</label>
-              <textarea id="fieldDigitalResources" rows="2" placeholder="عرض تقديمي (PowerPoint)، مقطع فيديو يوتيوب، محاكاة تفاعلية..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none"></textarea>
+              <label class="block text-xs font-bold text-slate-700 mb-1">التقنيات والمصادر الرقمية</label>
+              <textarea id="fieldDigitalResources" rows="2" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none" placeholder="عرض بوربوينت، مقطع فيديو تعليمي، محاكاة..."></textarea>
             </div>
           </div>
         </div>
 
-        <!-- Card 4: Lesson Plan Procedures (Steps) -->
-        <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <i class="fa-solid fa-list-check text-emerald-600"></i>
-              <span>رابعاً: خطوات ومجريات الحصة الصفية</span>
-            </div>
-            <button id="addStepBtn" class="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1">
-              <i class="fa-solid fa-circle-plus"></i> إضافة مرحلة
+        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-list-ol text-emerald-600"></i>
+              <span>4. سير الحصة والأنشطة الصفية</span>
+            </h2>
+            <button id="addStepBtn" class="text-xs text-brand-600 hover:text-brand-700 font-bold flex items-center gap-1 px-2 py-1 rounded bg-brand-50">
+              <i class="fa-solid fa-plus"></i> إضافة مرحلة
             </button>
           </div>
 
           <div id="stepsContainer" class="space-y-4">
-            <!-- Dynamic Step Cards injected by JS -->
+            <!-- Dynamic Steps Rows -->
           </div>
         </div>
 
-        <!-- Card 5: Differentiation, Homework & Reflection -->
-        <div class="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <i class="fa-solid fa-users-gear text-purple-600"></i>
-              <span>خامساً: الفروق الفردية والواجب والتأمل</span>
-            </div>
+        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-user-check text-purple-600"></i>
+              <span>5. الفروق الفردية والواجب والتأمل</span>
+            </h2>
           </div>
 
-          <div class="space-y-3.5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">دعم المتعثرين (العلاج)</label>
-                <textarea id="fieldRemedial" rows="2" placeholder="تبسيط خطوات المسألة، مساندة بصرية، بطاقات مراجعة..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none"></textarea>
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">أنشطة الموهوبين (الإثراء)</label>
-                <textarea id="fieldEnrichment" rows="2" placeholder="سؤال تفكير ناقد، إعداد ملخص بصري، قيادة المناقشة..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none"></textarea>
-              </div>
-            </div>
-
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">الواجب المنزلي والتكليفات</label>
-              <input type="text" id="fieldHomework" placeholder="حل تدريبات صفحة 45 بالدفتر + البحث عن مثال من الحياة الواقعية" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+              <label class="block text-xs font-bold text-slate-700 mb-1">دعم المتعثرين (علاجي)</label>
+              <textarea id="fieldRemedial" rows="2" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none" placeholder="بطاقات مصورة، تبسيط السؤال، أقران..."></textarea>
             </div>
-
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">التأمل الذاتي للمعلم بعد الحصة</label>
-              <textarea id="fieldReflection" rows="2" placeholder="ملاحظات حول تجاوب الطلاب، الأنشطة الأكثر فاعلية، وما يحتاج لتعديل في الحصة القادمة..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none"></textarea>
+              <label class="block text-xs font-bold text-slate-700 mb-1">أنشطة المتميزين (إثرائي)</label>
+              <textarea id="fieldEnrichment" rows="2" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none" placeholder="سؤال تفكير ناقد، إعداد نشاط قيادي..."></textarea>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">الواجب المنزلي والتكليفات</label>
+              <input type="text" id="fieldHomework" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition" placeholder="حل تدريبات صفحة 45 + رسم مخطط مبسط">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">التأمل الذاتي للمعلم بعد الحصة</label>
+              <textarea id="fieldReflection" rows="2" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition resize-none" placeholder="ملاحظات حول تجاوب الطلاب والأنشطة الأكثر فعالية..."></textarea>
             </div>
           </div>
         </div>
@@ -338,125 +346,141 @@
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: Live Printable A4 Sheet Preview -->
-    <div id="previewPanel" class="w-full lg:w-1/2 h-full overflow-y-auto p-3 sm:p-6 bg-slate-200/70 flex justify-center items-start">
+    <div id="previewPanel" class="w-full lg:w-1/2 h-full overflow-y-auto overflow-x-hidden p-2 sm:p-6 bg-slate-300/80 hidden lg:flex flex-col items-center">
       
-      <!-- The Printable Document Sheet (Simulated A4 Paper) -->
-      <div id="printSheet" class="printable-sheet bg-white w-full max-w-[210mm] min-h-[297mm] shadow-2xl rounded-sm p-6 sm:p-10 border border-slate-300 text-slate-900 leading-normal flex flex-col justify-between">
-        
-        <div class="space-y-5">
-          <!-- Document Header with Ministry-like Layout -->
-          <div class="border-b-2 border-slate-900 pb-3">
-            <div class="flex justify-between items-center text-xs text-slate-700 font-semibold mb-2">
-              <div class="text-right">
-                <p id="docSchoolHeader" class="text-slate-900 font-bold text-sm">مدرسة الأمل النموذجية</p>
-                <p class="text-[11px] text-slate-500">وزارة التربية والتعليم</p>
-              </div>
-              <div class="text-center px-3 py-1 border border-slate-800 rounded bg-slate-50">
-                <span class="text-xs font-black text-slate-900 uppercase tracking-wider">خطة درس نموذجية</span>
-              </div>
-              <div class="text-left text-[11px] text-slate-500">
-                <p>العام الدراسي: 2026/2027</p>
-                <p id="docDateHeader">التاريخ: 2026/10/01</p>
-              </div>
-            </div>
-
-            <!-- Title Highlight -->
-            <div class="bg-slate-100 rounded-lg p-2.5 text-center border border-slate-300">
-              <h2 id="docTopic" class="text-lg font-black text-slate-900 leading-snug">دورة الماء في الطبيعة</h2>
-              <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-slate-700 mt-1 font-medium">
-                <span>المادة: <b id="docSubject" class="text-slate-900">العلوم العامة</b></span>
-                <span>•</span>
-                <span>الصف: <b id="docGrade" class="text-slate-900">الصف الخامس الابتدائي</b></span>
-                <span>•</span>
-                <span>الوحدة: <b id="docUnit" class="text-slate-900">الوحدة الثالثة</b></span>
-                <span>•</span>
-                <span>الزمن: <b id="docDuration" class="text-slate-900">45 دقيقة</b></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section: Basic Meta Table -->
-          <div class="overflow-hidden border border-slate-300 rounded text-xs">
-            <table class="w-full text-right border-collapse">
-              <tr class="bg-slate-50 border-b border-slate-200">
-                <td class="p-2 font-bold w-1/4 bg-slate-100 border-l border-slate-200">اسم المعلم/ة:</td>
-                <td class="p-2 w-1/4 border-l border-slate-200" id="docTeacher">أ. أحمد السعيد</td>
-                <td class="p-2 font-bold w-1/4 bg-slate-100 border-l border-slate-200">تاريخ التنفيذ:</td>
-                <td class="p-2 w-1/4" id="docDate">2026-10-01</td>
-              </tr>
-              <tr>
-                <td class="p-2 font-bold bg-slate-100 border-l border-slate-200">الوسائل التعليمية:</td>
-                <td class="p-2 border-l border-slate-200" id="docAids">كتاب الطالب، سبورة ذكية، كؤوس ماء وتجارب</td>
-                <td class="p-2 font-bold bg-slate-100 border-l border-slate-200">المصادر الرقمية:</td>
-                <td class="p-2" id="docDigital">مقطع فيديو تعليمي، محاكاة دورة الماء</td>
-              </tr>
-            </table>
-          </div>
-
-          <!-- Section: Objectives -->
-          <div class="border border-slate-300 rounded overflow-hidden">
-            <div class="bg-slate-800 text-white px-3 py-1.5 text-xs font-bold flex items-center justify-between">
-              <span>الأهداف السلوكية ونواتج التعلم المستهدفة (يتوقع من الطالب بنهاية الحصة أن يكون قادراً على):</span>
-            </div>
-            <div class="p-3 bg-white">
-              <ul id="docObjectivesList" class="list-disc list-inside space-y-1 text-xs text-slate-800">
-                <!-- Objectives Injected Here -->
-              </ul>
-            </div>
-          </div>
-
-          <!-- Section: Lesson Procedures Table -->
-          <div class="border border-slate-300 rounded overflow-hidden">
-            <div class="bg-slate-800 text-white px-3 py-1.5 text-xs font-bold">
-              <span>سير الحصة الصفية والأنشطة التعليمية:</span>
-            </div>
-            <table class="w-full text-right text-[11px] border-collapse">
-              <thead>
-                <tr class="bg-slate-100 border-b border-slate-300 text-slate-900 font-bold">
-                  <th class="p-2 border-l border-slate-300 w-24">المرحلة والزمن</th>
-                  <th class="p-2 border-l border-slate-300">دور المعلم والأنشطة التعليمية</th>
-                  <th class="p-2 border-l border-slate-300">دور الطالب والمهام</th>
-                  <th class="p-2 w-32">الاستراتيجية وأداة التقويم</th>
-                </tr>
-              </thead>
-              <tbody id="docStepsTableBody" class="divide-y divide-slate-200">
-                <!-- Table rows Injected Here -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Section: Differentiation & Homework -->
-          <div class="grid grid-cols-2 gap-3 text-xs">
-            <div class="border border-slate-300 rounded p-2.5 bg-slate-50">
-              <span class="font-bold block text-slate-900 mb-1 border-b border-slate-200 pb-1">مراعاة الفروق الفردية:</span>
-              <p class="text-[11px] text-slate-700 mb-1"><strong>الدعم (علاجي):</strong> <span id="docRemedial">تبسيط المفاهيم عبر بطاقات توضيحية.</span></p>
-              <p class="text-[11px] text-slate-700"><strong>الإثراء:</strong> <span id="docEnrichment">بحث أثر التغير المناخي على تبخر المياه.</span></p>
-            </div>
-            <div class="border border-slate-300 rounded p-2.5 bg-slate-50">
-              <span class="font-bold block text-slate-900 mb-1 border-b border-slate-200 pb-1">الواجب المنزلي والتأمل:</span>
-              <p class="text-[11px] text-slate-700 mb-1"><strong>الواجب:</strong> <span id="docHomework">حل النشاط ص 42 ورسم مخطط للدورة.</span></p>
-              <p class="text-[11px] text-slate-700"><strong>التأمل:</strong> <span id="docReflection">تفاعل ممتاز في تجربة التبخر العملية.</span></p>
-            </div>
-          </div>
+      <!-- Zoom & Scaler Toolbar -->
+      <div class="zoom-controls no-print flex items-center justify-between w-full max-w-[210mm] mb-2 px-1 text-xs text-slate-700">
+        <span class="font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-file-pdf text-brand-600"></i> معاينة ورقة A4 للطباعة
+        </span>
+        <div class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl shadow-xs border border-slate-300">
+          <button id="zoomOutBtn" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 flex items-center justify-center">-</button>
+          <span id="zoomPercentLabel" class="w-12 text-center font-bold text-xs">100%</span>
+          <button id="zoomInBtn" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 flex items-center justify-center">+</button>
+          <button id="zoomFitMobileBtn" class="px-2 py-1 rounded-lg bg-brand-50 text-brand-700 font-bold hover:bg-brand-100 text-[11px]">ملاءمة الشاشة</button>
         </div>
+      </div>
 
-        <!-- Official Signatures Footer -->
-        <div class="border-t-2 border-slate-900 pt-3 mt-6 text-xs text-slate-800 keep-together">
-          <div class="flex justify-between items-center px-4 font-bold">
-            <div class="text-center">
-              <p>توقيع معلم المادة</p>
-              <p class="text-[11px] text-slate-400 mt-5 font-normal">.................................</p>
+      <div id="sheetZoomWrapper" class="sheet-zoom-viewport w-full pb-28 lg:pb-10">
+        
+        <div id="printSheet" class="a4-page text-xs leading-relaxed flex flex-col justify-between border border-slate-300 sm:rounded-sm">
+          
+          <div class="space-y-3.5">
+            <!-- Official Header -->
+            <div class="border-b-2 border-slate-900 pb-2.5">
+              <div class="flex justify-between items-center text-[11px] font-bold text-slate-700 mb-2">
+                <div class="text-right">
+                  <p>وزارة التعليم</p>
+                  <p id="docSchoolHeader">مدرسة الأمل النموذجية</p>
+                </div>
+                <div class="text-center font-black text-slate-900 text-sm">
+                  <p>خطة درس يومية نموذجية</p>
+                  <p class="text-[10px] text-slate-500 font-normal">العام الدراسي 2026 / 2027</p>
+                </div>
+                <div class="text-left">
+                  <p>المملكة العربية السعودية</p>
+                  <p>قسم الإشراف التربوي</p>
+                </div>
+              </div>
+
+              <!-- Lesson Headline -->
+              <div class="bg-slate-100 rounded-lg p-2 text-center border border-slate-300">
+                <h3 id="docTopic" class="text-base font-black text-slate-900">دورة الماء في الطبيعة</h3>
+                <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-[11px] text-slate-700 font-medium mt-1">
+                  <span>المادة: <b id="docSubject" class="text-slate-900">العلوم العامة</b></span>
+                  <span>•</span>
+                  <span>الصف: <b id="docGrade" class="text-slate-900">الخامس الابتدائي</b></span>
+                  <span>•</span>
+                  <span>الوحدة: <b id="docUnit" class="text-slate-900">الوحدة الثالثة</b></span>
+                  <span>•</span>
+                  <span>الزمن: <b id="docDuration" class="text-slate-900">45 دقيقة</b></span>
+                </div>
+              </div>
             </div>
-            <div class="text-center">
-              <p>المشرف التربوي</p>
-              <p class="text-[11px] text-slate-400 mt-5 font-normal">.................................</p>
+
+            <!-- Meta Table -->
+            <div class="border border-slate-300 rounded overflow-hidden text-[11px]">
+              <table class="w-full text-right border-collapse">
+                <tr class="bg-slate-50 border-b border-slate-200">
+                  <td class="p-1.5 font-bold w-1/4 bg-slate-100 border-l border-slate-200">المعلم/ة:</td>
+                  <td class="p-1.5 w-1/4 border-l border-slate-200" id="docTeacher">أ. محمد أحمد</td>
+                  <td class="p-1.5 font-bold w-1/4 bg-slate-100 border-l border-slate-200">تاريخ الحصة:</td>
+                  <td class="p-1.5 w-1/4" id="docDate">2026-10-01</td>
+                </tr>
+                <tr>
+                  <td class="p-1.5 font-bold bg-slate-100 border-l border-slate-200">الوسائل التعليمية:</td>
+                  <td class="p-1.5 border-l border-slate-200" id="docAids">الكتاب، سبورة، بطاقات</td>
+                  <td class="p-1.5 font-bold bg-slate-100 border-l border-slate-200">المصادر الرقمية:</td>
+                  <td class="p-1.5" id="docDigital">عرض تفاعلي، فيديو تعليمي</td>
+                </tr>
+              </table>
             </div>
-            <div class="text-center">
-              <p>يعتمد: مدير / مديرة المدرسة</p>
-              <p class="text-[11px] text-slate-400 mt-5 font-normal">.................................</p>
+
+            <!-- Objectives Section -->
+            <div class="border border-slate-300 rounded overflow-hidden">
+              <div class="bg-slate-800 text-white px-3 py-1 text-[11px] font-bold">
+                الأهداف السلوكية ونواتج التعلم المستهدفة (SMART):
+              </div>
+              <div class="p-2.5 bg-white">
+                <ul id="docObjectivesList" class="list-disc list-inside space-y-1 text-[11px] text-slate-800">
+                  <!-- Populated dynamically -->
+                </ul>
+              </div>
+            </div>
+
+            <div class="border border-slate-300 rounded overflow-hidden">
+              <div class="bg-slate-800 text-white px-3 py-1 text-[11px] font-bold">
+                سير الحصة الصفية والأنشطة التعليمية:
+              </div>
+              <table class="w-full text-right text-[10.5px] border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-300 text-slate-900 font-bold">
+                    <th class="p-1.5 border-l border-slate-300 w-24">المرحلة / الزمن</th>
+                    <th class="p-1.5 border-l border-slate-300">دور المعلم والأنشطة</th>
+                    <th class="p-1.5 border-l border-slate-300">دور الطالب والمهام</th>
+                    <th class="p-1.5 w-32">الاستراتيجية والتقويم</th>
+                  </tr>
+                </thead>
+                <tbody id="docStepsTableBody" class="divide-y divide-slate-200">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Differentiation & Homework -->
+            <div class="grid grid-cols-2 gap-2.5 text-[11px]">
+              <div class="border border-slate-300 rounded p-2 bg-slate-50">
+                <span class="font-bold text-slate-900 block mb-1 border-b border-slate-200 pb-0.5">مراعاة الفروق الفردية:</span>
+                <p class="text-slate-700 mb-0.5"><strong>دعم المتعثرين:</strong> <span id="docRemedial">-</span></p>
+                <p class="text-slate-700"><strong>إثراء الموهوبين:</strong> <span id="docEnrichment">-</span></p>
+              </div>
+              <div class="border border-slate-300 rounded p-2 bg-slate-50">
+                <span class="font-bold text-slate-900 block mb-1 border-b border-slate-200 pb-0.5">الواجب والتأمل:</span>
+                <p class="text-slate-700 mb-0.5"><strong>الواجب:</strong> <span id="docHomework">-</span></p>
+                <p class="text-slate-700"><strong>التأمل الذاتي:</strong> <span id="docReflection">-</span></p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Signatures Footer -->
+          <div class="border-t-2 border-slate-900 pt-3 mt-4 text-[11px] text-slate-800 keep-together">
+            <div class="flex justify-between items-center px-4 font-bold">
+              <div class="text-center">
+                <p>توقيع معلم المادة</p>
+                <p class="text-[10px] text-slate-400 mt-4 font-normal">.................................</p>
+              </div>
+              <div class="text-center">
+                <p>المشرف التربوي الزائر</p>
+                <p class="text-[10px] text-slate-400 mt-4 font-normal">.................................</p>
+              </div>
+              <div class="text-center">
+                <p>يعتمد: مدير / مديرة المدرسة</p>
+                <p class="text-[10px] text-slate-400 mt-4 font-normal">.................................</p>
+              </div>
             </div>
           </div>
+
         </div>
 
       </div>
@@ -465,189 +489,386 @@
 
   </main>
 
-  <!-- AI Generator Modal -->
-  <div id="aiModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden no-print">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 modal-animate space-y-4">
+  <nav id="mobileNav" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-1.5 shadow-lg flex items-center justify-around no-print">
+    <button id="navBtnEditor" class="flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl text-brand-600 font-bold transition">
+      <i class="fa-solid fa-pen-to-square text-lg mb-0.5"></i>
+      <span class="text-[11px]">المحرر</span>
+    </button>
+
+    <button id="navBtnPreview" class="flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-500 hover:text-slate-800 transition">
+      <i class="fa-solid fa-file-lines text-lg mb-0.5"></i>
+      <span class="text-[11px]">المعاينة</span>
+    </button>
+
+    <button id="navBtnAi" class="flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl text-violet-600 transition">
+      <i class="fa-solid fa-wand-magic-sparkles text-lg mb-0.5"></i>
+      <span class="text-[11px]">توليد ذكي</span>
+    </button>
+
+    <button id="navBtnPrint" class="flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl text-emerald-600 transition">
+      <i class="fa-solid fa-print text-lg mb-0.5"></i>
+      <span class="text-[11px]">طباعة PDF</span>
+    </button>
+  </nav>
+
+  <div id="aiModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden no-print">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
       
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
           </div>
           <div>
-            <h3 class="font-bold text-slate-900 text-sm">مساعد الذكاء الاصطناعي لتخطيط الدروس</h3>
-            <p class="text-[11px] text-slate-500">مدعوم بنموذج Google Gemini التربوي السريع</p>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">المولد التربوي الذكي</h3>
+            <p class="text-[11px] text-slate-500">صياغة خطة الدرس كاملة خلال ثوانٍ</p>
           </div>
         </div>
-        <button id="closeAiModalBtn" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark"></i>
+        <button id="closeAiModalBtn" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">موضوع الدرس أو عنوانه <span class="text-rose-500">*</span></label>
-          <input type="text" id="aiTopicInput" placeholder="مثال: نظرية فيثاغورس، أو البناء الضوئي، أو كان وأخواتها..." class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none transition">
+          <label class="block text-xs font-bold text-slate-700 mb-1">موضوع الدرس <span class="text-rose-500">*</span></label>
+          <input type="text" id="aiTopicInput" placeholder="مثال: خصائص المادة وحالاتها" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-violet-500 outline-none">
         </div>
-
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-2.5">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">المادة</label>
-            <input type="text" id="aiSubjectInput" placeholder="مثال: الرياضيات" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+            <label class="block text-xs font-bold text-slate-700 mb-1">المادة</label>
+            <input type="text" id="aiSubjectInput" placeholder="العلوم" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-violet-500 outline-none">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">الصف المستهدف</label>
-            <input type="text" id="aiGradeInput" placeholder="مثال: الثاني المتوسط" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+            <label class="block text-xs font-bold text-slate-700 mb-1">الصف</label>
+            <input type="text" id="aiGradeInput" placeholder="الثالث المتوسط" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-violet-500 outline-none">
           </div>
         </div>
-
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">ملاحظات أو تركيز إضافي (اختياري)</label>
-          <input type="text" id="aiNotesInput" placeholder="مثال: التركيز على استراتيجية التعلم التعاوني وتطبيقات واقعية" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+          <label class="block text-xs font-bold text-slate-700 mb-1">ملاحظات أو استراتيجيات مفضلة (اختياري)</label>
+          <input type="text" id="aiNotesInput" placeholder="مثال: التركيز على استراتيجية حل المشكلات والتعلم التعاوني" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:border-violet-500 outline-none">
         </div>
-
-        <!-- Optional API Key Accordion -->
-        <details class="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
-          <summary class="cursor-pointer font-medium text-slate-700 select-none">إعدادات مفتاح API (اختياري - مفعل تلقائياً في البيئة)</summary>
-          <div class="mt-2 space-y-1">
-            <input type="password" id="customApiKeyInput" placeholder="ضع مفتاح Gemini الخاص بك هنا إذا أردت استخدامه شخصياً" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white outline-none">
-            <p class="text-[10px] text-slate-400">إذا تُرك فارغاً، سيتم استخدام مفتاح النظام الافتراضي.</p>
-          </div>
-        </details>
       </div>
 
-      <!-- Action Footer -->
-      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-        <button id="cancelAiBtn" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">إلغاء</button>
-        <button id="executeAiBtn" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-md shadow-violet-600/30 transition hover:scale-[1.01] active:scale-[0.98]">
+      <div id="aiLoadingIndicator" class="hidden flex-col items-center justify-center p-4 space-y-2 text-center bg-violet-50 rounded-xl">
+        <div class="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin"></div>
+        <p class="text-xs font-bold text-violet-800">جاري صياغة خطة الدرس بالذكاء الاصطناعي...</p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button id="cancelAiBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">إلغاء</button>
+        <button id="executeAiBtn" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-md shadow-violet-500/20 active:scale-95 transition">
           <i class="fa-solid fa-sparkles"></i>
-          <span>بدء التوليد الذكي</span>
+          <span>ابدأ التوليد</span>
         </button>
       </div>
 
-      <!-- Loading Overlay inside Modal -->
-      <div id="aiLoadingOverlay" class="hidden flex-col items-center justify-center p-6 space-y-3 text-center">
-        <div class="w-12 h-12 rounded-full border-4 border-violet-200 border-t-violet-600 animate-spin"></div>
-        <p class="text-xs font-bold text-slate-800">جاري صياغة خطة الدرس بالذكاء الاصطناعي التربوي...</p>
-        <p class="text-[11px] text-slate-500">يتم ترتيب الأهداف، صياغة الأنشطة، والتقويم التكويني</p>
-      </div>
     </div>
   </div>
 
-  <!-- Custom Alert / Toast Notification Container -->
-  <div id="toastContainer" class="fixed bottom-4 left-4 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
+  <div id="toastBox" class="fixed bottom-16 sm:bottom-4 left-4 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
 
   <script>
-    /* Default Initial Sample Lesson Data */
-    const sampleLessonTemplate = {
-      id: "lesson-1",
-      topic: "دورة الماء في الطبيعة وأهميتها البيئية",
+    /* Default initial lesson data */
+    const initialLesson = {
+      id: "lesson-" + Date.now(),
+      topic: "دورة الماء في الطبيعة",
       subject: "العلوم العامة",
       grade: "الصف الخامس الابتدائي",
-      unit: "الوحدة الثالثة: كوكب الأرض وموارده",
-      date: new Date().toISOString().split('T')[0],
+      unit: "الوحدة الثالثة: كوكب الأرض",
       duration: "45 دقيقة",
-      teacher: "أ. أحمد السعيد",
-      school: "مدرسة الأمل النموذجية للبنين",
-      aids: "كتاب العلوم، مجسم الكرة الأرضية، كؤوس ماء ومصدر حراري آمن، بطاقات ملونة",
-      digitalResources: "شاشة تفاعلية، فيديو قصير ثلاثي الأبعاد لدورة الماء، تطبيق كويز للمراجعة",
-      remedial: "توفير مخطط مرئي بسيط يوضح المراحل الثلاث (تبخر، تكاثف، هطول) مع أسئلة مباشرة موجهة.",
-      enrichment: "تكليف الطالب المتميز ببحث أثر ظاهرة الاحتباس الحراري على دورة المياه وتقديم تقرير مبسط.",
-      homework: "حل النشاط رقم (2) في دفتر التمارين ص 42 ورسم رسمة توضيحية لدورة الماء في الطبيعة.",
-      reflection: "تفاعل الطلاب كان ممتازاً مع تجربة التبخر العملية، يحتاج جزء التكاثف إلى تخصيص دقيقتين إضافيتين.",
+      date: new Date().toISOString().split('T')[0],
+      teacher: "أ. محمد أحمد",
+      school: "مدرسة الأمل النموذجية",
+      aids: "كتاب الطالب، كؤوس ماء، مجسم التبخر، بطاقات ملونة",
+      digitalResources: "شاشة ذكية، فيديو تعليمي 3D، تطبيق كويز تفاعلي",
+      remedial: "توفير بطاقات مصورة توضح التبخر والتكاثف مع طرح أسئلة موجهة.",
+      enrichment: "تكليف الطالب ببحث أثر التغير المناخي على هطول الأمطار وعرضه على الصف.",
+      homework: "حل التمرين رقم 3 صفحة 48 في دفتر المادة ورسم مخطط توضيحي.",
+      reflection: "تفاعل متميز في النشاط التعاوني العملي، يحتاج جزء التكاثف لدقيقتين إضافيتين.",
       objectives: [
-        { type: "معرفي", text: "أن يوضح الطالب مراحل دورة الماء في الطبيعة (تبخر، تكاثف، هطول) بدقة تامة." },
-        { type: "مهاري", text: "أن يرسم الطالب مخططاً انسيابياً يربط بين الشمس وحركة المياه في الغلاف الجوي." },
-        { type: "وجداني", text: "أن يقدّر الطالب عظمة الخالق ونعمة الماء ويقترح ممارسات للحفاظ على ترشيد استهلاكه." }
+        { type: "معرفي", text: "أن يوضح الطالب مراحل دورة الماء في الطبيعة بدقة تامة." },
+        { type: "مهاري", text: "أن يرسم الطالب مخططاً مبسطاً يوضح حركة الماء بين الأرض والغلاف الجوي." },
+        { type: "وجداني", text: "أن يُقدّر الطالب نعمة الماء في استمرار الحياة ويقترح سلوكيات لترشيده." }
       ],
       steps: [
         {
           stage: "التهيئة والتمهيد",
           time: "5 د",
-          teacherRole: "عرض صورة لكأس ماء بارد يتكون قطرات على جداره، وطرح سؤال تحدي: 'من أين جاء هذا الماء؟'.",
-          studentRole: "التفكير والتخمين والمشاركة الشفوية الفعالة وتذكر معلومات الحصة السابقة.",
-          strategy: "العصف الذهني والاستقصاء الشفوي",
+          teacherRole: "عرض صورة لكأس ماء بارد يتكاثف على جداره بخار الماء، وطرح سؤال تحدي.",
+          studentRole: "التفكير والتخمين وتذكر معلومات سابقة والمشاركة الشفوية.",
+          strategy: "العصف الذهني والحوار",
           assessment: "تقويم تشخيصي (ملاحظة الإجابات)"
         },
         {
           stage: "العرض والنمذجة",
           time: "15 د",
-          teacherRole: "شرح مفهوم التبخر والتكاثف بالاستعانة بمقطع فيديو 3D ونمذجة دور حرارة الشمس في ذلك.",
-          studentRole: "تدوين الكلمات المفتاحية في دفتر الملاحظات، ومتابعة التجربة المعملية المبسطة.",
-          strategy: "التدريس المباشر مع النمذجة البصرية",
-          assessment: "تقويم تكويني عبر أسئلة سريعة شفوية"
+          teacherRole: "شرح مفهوم التبخر والتكاثف مستعيناً بمقطع فيديو ومحاكاة تفاعلية.",
+          studentRole: "تدوين المفاهيم في الدفتر والاستفسار عن النقاط غير الواضحة.",
+          strategy: "التدريس المباشر مع النمذجة",
+          assessment: "تقويم بنائي مستمر"
         },
         {
-          stage: "التعلم التعاوني والتطبيق",
+          stage: "التعلم التعاوني",
           time: "15 د",
-          teacherRole: "توزيع الطلاب إلى مجموعات ثلاثية، وتوزيع ورقة نشاط لترتيب بطاقات مراحل الدورة وتقديم التوجيه.",
-          studentRole: "العمل التشاركي لترتيب بطاقات التبخر والتكاثف والهطول ومناقشة النتيجة مع المجموعة.",
+          teacherRole: "توزيع بطاقات المراحل على مجموعات العمل ومتابعة النقاشات وتوجيه الفرق.",
+          studentRole: "العمل التشاركي لترتيب بطاقات المراحل ومناقشة النتيجة مع الفريق.",
           strategy: "التعلم التعاوني وحل المشكلات",
-          assessment: "متابعة إنجاز ورقة النشاط الفريقي"
+          assessment: "تقييم نشاط المجموعات"
         },
         {
-          stage: "الغلق والتقويم الختامي",
+          stage: "الغلق والتقويم",
           time: "10 د",
-          teacherRole: "تلخيص أهم النقاط على السبورة وتوزيع بطاقة الخروج السريعة (Exit Ticket) على كل طالب.",
-          studentRole: "كتابة سطر واحد يلخص ما تعلمه وتسليم بطاقة الخروج قبل مغادرة الحصة.",
+          teacherRole: "تلخيص أهم النقاط على السبورة وتوزيع بطاقة الخروج السريعة.",
+          studentRole: "حل سؤال بطاقة الخروج فردياً وتقديم التلخيص النهائي.",
           strategy: "تذكرة الخروج (Exit Ticket)",
-          assessment: "تقويم ختامي فردي لقياس تحقق الأهداف"
+          assessment: "تقويم ختامي فردي"
         }
       ]
     };
 
-    // State management
+    /* App State */
     let state = {
-      lessons: [JSON.parse(JSON.stringify(sampleLessonTemplate))],
-      activeLessonId: "lesson-1",
-      viewMode: "split" // 'split', 'editor', 'preview'
+      lessons: [initialLesson],
+      activeLessonId: initialLesson.id,
+      viewMode: window.innerWidth >= 1024 ? "split" : "editor",
+      zoomLevel: 1.0
     };
 
+    /* Helpers */
     function getActiveLesson() {
       return state.lessons.find(l => l.id === state.activeLessonId) || state.lessons[0];
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
+      const toastBox = document.getElementById('toastBox');
       const toast = document.createElement('div');
       
-      const icons = {
-        success: 'fa-circle-check text-emerald-500',
-        error: 'fa-circle-exclamation text-rose-500',
-        info: 'fa-circle-info text-brand-500',
-        warning: 'fa-triangle-exclamation text-amber-500'
+      const bgColors = {
+        success: 'bg-emerald-600 text-white',
+        warning: 'bg-amber-500 text-white',
+        error: 'bg-rose-600 text-white',
+        info: 'bg-slate-800 text-white'
       };
 
-      toast.className = 'pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900 text-white text-xs font-semibold shadow-xl border border-slate-800 transition-all duration-300 translate-y-2 opacity-0';
+      toast.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 transition-all transform duration-200 translate-y-2 opacity-0 pointer-events-auto ${bgColors[type] || bgColors.info}`;
       toast.innerHTML = `
-        <i class="fa-solid ${icons[type] || icons.info} text-sm"></i>
-        <span>${message}</span>
+        <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info'}"></i>
+        <span>${escapeHtml(message)}</span>
       `;
 
-      container.appendChild(toast);
-      
-      // Animate in
+      toastBox.appendChild(toast);
       requestAnimationFrame(() => {
         toast.classList.remove('translate-y-2', 'opacity-0');
       });
 
-      // Auto dismiss after 3.5s
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    function setZoom(level) {
+      state.zoomLevel = Math.max(0.3, Math.min(1.4, Number(level.toFixed(2))));
+      const wrapper = document.getElementById('sheetZoomWrapper');
+      const label = document.getElementById('zoomPercentLabel');
+      if (wrapper) wrapper.style.transform = `scale(${state.zoomLevel})`;
+      if (label) label.innerText = `${Math.round(state.zoomLevel * 100)}%`;
+    }
+
+    function fitToScreen() {
+      const previewPanel = document.getElementById('previewPanel');
+      if (!previewPanel) return;
+      const availableWidth = previewPanel.clientWidth - 24;
+      const sheetWidthPx = 794; // approx A4 210mm in standard 96dpi pixels
+      if (availableWidth < sheetWidthPx) {
+        setZoom(availableWidth / sheetWidthPx);
+      } else {
+        setZoom(1.0);
+      }
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      const editorPanel = document.getElementById('editorPanel');
+      const previewPanel = document.getElementById('previewPanel');
+
+      const mobEditBtn = document.getElementById('mobileToggleEditBtn');
+      const mobPrevBtn = document.getElementById('mobileTogglePreviewBtn');
+      const navEdit = document.getElementById('navBtnEditor');
+      const navPrev = document.getElementById('navBtnPreview');
+
+      const splitBtn = document.getElementById('desktopSplitBtn');
+      const editBtn = document.getElementById('desktopEditBtn');
+      const prevBtn = document.getElementById('desktopPreviewBtn');
+
+      if (mode === 'editor') {
+        editorPanel.classList.remove('hidden', 'lg:w-1/2');
+        editorPanel.classList.add('w-full');
+        previewPanel.classList.add('hidden');
+        previewPanel.classList.remove('flex', 'w-full', 'lg:w-1/2');
+
+        if (mobEditBtn) mobEditBtn.className = 'px-3 py-1.5 rounded-lg bg-white text-brand-600 shadow-xs flex items-center gap-1';
+        if (mobPrevBtn) mobPrevBtn.className = 'px-3 py-1.5 rounded-lg text-slate-600 flex items-center gap-1';
+        if (navEdit) navEdit.className = 'flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl text-brand-600 font-bold';
+        if (navPrev) navPrev.className = 'flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-500 hover:text-slate-800';
+      } 
+      else if (mode === 'preview') {
+        editorPanel.classList.add('hidden');
+        editorPanel.classList.remove('w-full', 'lg:w-1/2');
+        previewPanel.classList.remove('hidden', 'lg:w-1/2');
+        previewPanel.classList.add('flex', 'w-full');
+
+        if (mobEditBtn) mobEditBtn.className = 'px-3 py-1.5 rounded-lg text-slate-600 flex items-center gap-1';
+        if (mobPrevBtn) mobPrevBtn.className = 'px-3 py-1.5 rounded-lg bg-white text-brand-600 shadow-xs flex items-center gap-1';
+        if (navEdit) navEdit.className = 'flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-500 hover:text-slate-800';
+        if (navPrev) navPrev.className = 'flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl text-brand-600 font-bold';
+
+        // Auto-fit sheet on mobile when entering preview
+        setTimeout(fitToScreen, 50);
+      } 
+      else if (mode === 'split') {
+        editorPanel.classList.remove('hidden', 'w-full');
+        editorPanel.classList.add('w-full', 'lg:w-1/2');
+        previewPanel.classList.remove('hidden', 'w-full');
+        previewPanel.classList.add('flex', 'w-full', 'lg:w-1/2');
+
+        [splitBtn, editBtn, prevBtn].forEach(b => {
+          if (b) b.className = 'px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900';
+        });
+        if (splitBtn) splitBtn.className = 'px-3 py-1.5 rounded-lg bg-white shadow-xs text-brand-600 font-bold';
+        setTimeout(fitToScreen, 50);
+      }
+    }
+
+    function renderTabs() {
+      const container = document.getElementById('lessonsTabsContainer');
+      container.innerHTML = '';
+
+      state.lessons.forEach((lesson, index) => {
+        const isActive = lesson.id === state.activeLessonId;
+        const tab = document.createElement('div');
+        tab.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition select-none ${
+          isActive 
+            ? 'bg-brand-50 text-brand-700 border border-brand-200' 
+            : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-transparent'
+        }`;
+
+        const titleText = lesson.topic ? (lesson.topic.length > 15 ? lesson.topic.substring(0, 15) + '...' : lesson.topic) : `خطة ${index + 1}`;
+        tab.innerHTML = `
+          <i class="fa-solid fa-file-lines ${isActive ? 'text-brand-600' : 'text-slate-400'}"></i>
+          <span>${escapeHtml(titleText)}</span>
+          ${state.lessons.length > 1 ? `
+            <button class="delete-tab-btn ml-0.5 text-slate-400 hover:text-rose-500 p-0.5 rounded">
+              <i class="fa-solid fa-xmark text-[11px]"></i>
+            </button>
+          ` : ''}
+        `;
+
+        tab.addEventListener('click', (e) => {
+          if (e.target.closest('.delete-tab-btn')) {
+            e.stopPropagation();
+            deleteLesson(lesson.id);
+            return;
+          }
+          state.activeLessonId = lesson.id;
+          renderTabs();
+          populateForm();
+        });
+
+        container.appendChild(tab);
+      });
+    }
+
+    function createNewLesson(data = null) {
+      const newLesson = data || {
+        id: "lesson-" + Date.now(),
+        topic: `درس جديد (${state.lessons.length + 1})`,
+        subject: "المادة الدراسية",
+        grade: "الصف الدراسي",
+        unit: "الوحدة",
+        duration: "45 دقيقة",
+        date: new Date().toISOString().split('T')[0],
+        teacher: document.getElementById('fieldTeacher').value || "أ. المعلم/ة",
+        school: document.getElementById('fieldSchool').value || "المدرسة النموذجية",
+        aids: "كتاب المادة، السبورة",
+        digitalResources: "عرض تفاعلي",
+        remedial: "أنشطة تبسيطية مساندة",
+        enrichment: "تطبيق لمهام التفكير العليا",
+        homework: "حل تمارين الدرس",
+        reflection: "",
+        objectives: [
+          { type: "معرفي", text: "أن يتعرف الطالب على المفاهيم الأساسية للدرس بدقة." },
+          { type: "مهاري", text: "أن يطبق الطالب الخطوات بصورة صحيحة." }
+        ],
+        steps: [
+          {
+            stage: "التهيئة والتمهيد",
+            time: "5 د",
+            teacherRole: "طرح سؤال حافز ومراجعة التعلم السابق.",
+            studentRole: "التفكير والمشاركة الفعالة.",
+            strategy: "العصف الذهني",
+            assessment: "تقويم تشخيصي"
+          },
+          {
+            stage: "العرض والتطبيق",
+            time: "25 د",
+            teacherRole: "توضيح الأفكار ونمذجة الحلول وقيادة الأنشطة.",
+            studentRole: "التطبيق العملي والمشاركة في المهام الصفية.",
+            strategy: "التعلم النشط والتعاوني",
+            assessment: "تقويم تكويني"
+          },
+          {
+            stage: "الغلق والتقويم",
+            time: "15 د",
+            teacherRole: "تلخيص الدرس وتوزيع مهمة ختامية سريعة.",
+            studentRole: "إتمام المهمة وتقديم التغذية الراجعة.",
+            strategy: "تذكرة الخروج",
+            assessment: "تقويم ختامي"
+          }
+        ]
+      };
+
+      state.lessons.push(newLesson);
+      state.activeLessonId = newLesson.id;
+      renderTabs();
+      populateForm();
+      showToast('تمت إضافة خطة درس جديدة بنجاح', 'success');
+    }
+
+    function deleteLesson(id) {
+      if (state.lessons.length <= 1) {
+        showToast('يجب الاحتفاظ بخطة درس واحدة على الأقل', 'warning');
+        return;
+      }
+      state.lessons = state.lessons.filter(l => l.id !== id);
+      if (state.activeLessonId === id) {
+        state.activeLessonId = state.lessons[0].id;
+      }
+      renderTabs();
+      populateForm();
+      showToast('تم حذف الخطة', 'info');
     }
 
     function populateForm() {
       const lesson = getActiveLesson();
-      if (!lesson) return;
 
       document.getElementById('fieldTopic').value = lesson.topic || '';
       document.getElementById('fieldSubject').value = lesson.subject || '';
       document.getElementById('fieldGrade').value = lesson.grade || '';
       document.getElementById('fieldUnit').value = lesson.unit || '';
-      document.getElementById('fieldDate').value = lesson.date || '';
       document.getElementById('fieldDuration').value = lesson.duration || '';
+      document.getElementById('fieldDate').value = lesson.date || '';
       document.getElementById('fieldTeacher').value = lesson.teacher || '';
       document.getElementById('fieldSchool').value = lesson.school || '';
       document.getElementById('fieldAids').value = lesson.aids || '';
@@ -657,157 +878,123 @@
       document.getElementById('fieldHomework').value = lesson.homework || '';
       document.getElementById('fieldReflection').value = lesson.reflection || '';
 
-      renderObjectivesInputs();
-      renderStepsInputs();
-      updateLivePreview();
+      renderObjectivesInputs(lesson.objectives);
+      renderStepsInputs(lesson.steps);
+      updateDocPreview();
     }
 
-    function syncFormToState() {
-      const lesson = getActiveLesson();
-      if (!lesson) return;
-
-      lesson.topic = document.getElementById('fieldTopic').value;
-      lesson.subject = document.getElementById('fieldSubject').value;
-      lesson.grade = document.getElementById('fieldGrade').value;
-      lesson.unit = document.getElementById('fieldUnit').value;
-      lesson.date = document.getElementById('fieldDate').value;
-      lesson.duration = document.getElementById('fieldDuration').value;
-      lesson.teacher = document.getElementById('fieldTeacher').value;
-      lesson.school = document.getElementById('fieldSchool').value;
-      lesson.aids = document.getElementById('fieldAids').value;
-      lesson.digitalResources = document.getElementById('fieldDigitalResources').value;
-      lesson.remedial = document.getElementById('fieldRemedial').value;
-      lesson.enrichment = document.getElementById('fieldEnrichment').value;
-      lesson.homework = document.getElementById('fieldHomework').value;
-      lesson.reflection = document.getElementById('fieldReflection').value;
-
-      updateLivePreview();
-      renderTabs();
-    }
-
-    function renderObjectivesInputs() {
-      const lesson = getActiveLesson();
+    function renderObjectivesInputs(objectives = []) {
       const container = document.getElementById('objectivesContainer');
       container.innerHTML = '';
 
-      if (!lesson.objectives || lesson.objectives.length === 0) {
-        container.innerHTML = `
-          <div class="text-xs text-slate-400 py-3 text-center border border-dashed border-slate-200 rounded-xl">
-            لا توجد أهداف مضافة بعد. اضغط على "+ إضافة هدف" أعلاه.
-          </div>
-        `;
-        return;
-      }
-
-      lesson.objectives.forEach((obj, index) => {
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200';
-        div.innerHTML = `
-          <select class="obj-type-select px-2 py-1 text-xs rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 outline-none">
+      objectives.forEach((obj, index) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200';
+        row.innerHTML = `
+          <select class="obj-type-select px-2 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white outline-none">
             <option value="معرفي" ${obj.type === 'معرفي' ? 'selected' : ''}>معرفي</option>
             <option value="مهاري" ${obj.type === 'مهاري' ? 'selected' : ''}>مهاري</option>
             <option value="وجداني" ${obj.type === 'وجداني' ? 'selected' : ''}>وجداني</option>
           </select>
-          <input type="text" value="${escapeHtml(obj.text)}" class="obj-text-input flex-1 px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-white outline-none focus:border-brand-500" placeholder="نص الهدف الإجرائي المستهدف...">
-          <button class="remove-obj-btn text-slate-400 hover:text-rose-500 px-1.5 transition">
+          <input type="text" value="${escapeHtml(obj.text)}" class="obj-text-input flex-1 px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white outline-none" placeholder="نص الهدف السلوكي...">
+          <button class="delete-obj-btn p-1.5 text-slate-400 hover:text-rose-500 rounded transition" title="حذف الهدف">
             <i class="fa-solid fa-trash-can text-xs"></i>
           </button>
         `;
 
-        div.querySelector('.obj-type-select').addEventListener('change', (e) => {
-          lesson.objectives[index].type = e.target.value;
-          updateLivePreview();
-        });
+        const typeSelect = row.querySelector('.obj-type-select');
+        const textInput = row.querySelector('.obj-text-input');
+        const delBtn = row.querySelector('.delete-obj-btn');
 
-        div.querySelector('.obj-text-input').addEventListener('input', (e) => {
-          lesson.objectives[index].text = e.target.value;
-          updateLivePreview();
+        typeSelect.addEventListener('change', (e) => {
+          obj.type = e.target.value;
+          updateDocPreview();
         });
-
-        div.querySelector('.remove-obj-btn').addEventListener('click', () => {
+        textInput.addEventListener('input', (e) => {
+          obj.text = e.target.value;
+          updateDocPreview();
+        });
+        delBtn.addEventListener('click', () => {
+          const lesson = getActiveLesson();
           lesson.objectives.splice(index, 1);
-          renderObjectivesInputs();
-          updateLivePreview();
+          renderObjectivesInputs(lesson.objectives);
+          updateDocPreview();
         });
 
-        container.appendChild(div);
+        container.appendChild(row);
       });
     }
 
-    function renderStepsInputs() {
-      const lesson = getActiveLesson();
+    function renderStepsInputs(steps = []) {
       const container = document.getElementById('stepsContainer');
       container.innerHTML = '';
 
-      if (!lesson.steps || lesson.steps.length === 0) {
-        container.innerHTML = `
-          <div class="text-xs text-slate-400 py-4 text-center border border-dashed border-slate-200 rounded-xl">
-            لا توجد مراحل مسجلة. اضغط على "+ إضافة مرحلة" لإضافة خطوات الدرس.
-          </div>
-        `;
-        return;
-      }
-
-      lesson.steps.forEach((step, index) => {
+      steps.forEach((step, index) => {
         const card = document.createElement('div');
-        card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3';
+        card.className = 'bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200 space-y-2.5';
         card.innerHTML = `
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200">
-            <div class="flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-brand-600 text-white text-[11px] font-bold flex items-center justify-center">${index + 1}</span>
-              <input type="text" value="${escapeHtml(step.stage)}" class="step-stage-input font-bold text-xs text-slate-800 bg-white border border-slate-200 px-2 py-1 rounded-lg outline-none focus:border-brand-500" placeholder="اسم المرحلة (مثال: التهيئة)">
-              <input type="text" value="${escapeHtml(step.time)}" class="step-time-input w-16 text-xs text-center text-slate-600 bg-white border border-slate-200 px-1 py-1 rounded-lg outline-none" placeholder="الزمن">
-            </div>
-            <button class="remove-step-btn text-slate-400 hover:text-rose-500 text-xs px-1 transition" title="حذف المرحلة">
-              <i class="fa-solid fa-trash-can"></i>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
+              المرحلة ${index + 1}
+            </span>
+            <button class="delete-step-btn text-xs text-rose-500 hover:text-rose-700 font-bold p-1">
+              <i class="fa-solid fa-trash-can ml-1"></i> حذف
             </button>
           </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-[11px] font-medium text-slate-600 mb-0.5">دور المعلم والأنشطة:</label>
-              <textarea class="step-teacher-input w-full p-2 text-xs bg-white border border-slate-200 rounded-lg outline-none resize-none focus:border-brand-500" rows="2">${escapeHtml(step.teacherRole)}</textarea>
+              <label class="block text-[11px] font-bold text-slate-600 mb-0.5">اسم المرحلة</label>
+              <input type="text" value="${escapeHtml(step.stage)}" class="step-stage-input w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white outline-none">
             </div>
             <div>
-              <label class="block text-[11px] font-medium text-slate-600 mb-0.5">دور المتعلم والمهام:</label>
-              <textarea class="step-student-input w-full p-2 text-xs bg-white border border-slate-200 rounded-lg outline-none resize-none focus:border-brand-500" rows="2">${escapeHtml(step.studentRole)}</textarea>
+              <label class="block text-[11px] font-bold text-slate-600 mb-0.5">الزمن المخصص</label>
+              <input type="text" value="${escapeHtml(step.time)}" class="step-time-input w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white outline-none">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-0.5">دور المعلم والأنشطة</label>
+            <textarea rows="2" class="step-teacher-input w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white outline-none resize-none">${escapeHtml(step.teacherRole)}</textarea>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-0.5">دور الطالب والمهام</label>
+            <textarea rows="2" class="step-student-input w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white outline-none resize-none">${escapeHtml(step.studentRole)}</textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-0.5">الاستراتيجية</label>
+              <input type="text" value="${escapeHtml(step.strategy)}" class="step-strategy-input w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white outline-none">
             </div>
             <div>
-              <label class="block text-[11px] font-medium text-slate-600 mb-0.5">استراتيجية التدريس:</label>
-              <input type="text" value="${escapeHtml(step.strategy)}" class="step-strategy-input w-full p-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none">
-            </div>
-            <div>
-              <label class="block text-[11px] font-medium text-slate-600 mb-0.5">أسلوب وأداة التقويم:</label>
-              <input type="text" value="${escapeHtml(step.assessment)}" class="step-assessment-input w-full p-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none">
+              <label class="block text-[11px] font-bold text-slate-600 mb-0.5">أداة التقويم</label>
+              <input type="text" value="${escapeHtml(step.assessment)}" class="step-assessment-input w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white outline-none">
             </div>
           </div>
         `;
 
-        // Event Listeners for inputs
-        card.querySelector('.step-stage-input').addEventListener('input', e => { step.stage = e.target.value; updateLivePreview(); });
-        card.querySelector('.step-time-input').addEventListener('input', e => { step.time = e.target.value; updateLivePreview(); });
-        card.querySelector('.step-teacher-input').addEventListener('input', e => { step.teacherRole = e.target.value; updateLivePreview(); });
-        card.querySelector('.step-student-input').addEventListener('input', e => { step.studentRole = e.target.value; updateLivePreview(); });
-        card.querySelector('.step-strategy-input').addEventListener('input', e => { step.strategy = e.target.value; updateLivePreview(); });
-        card.querySelector('.step-assessment-input').addEventListener('input', e => { step.assessment = e.target.value; updateLivePreview(); });
+        // Bindings
+        card.querySelector('.step-stage-input').addEventListener('input', (e) => { step.stage = e.target.value; updateDocPreview(); });
+        card.querySelector('.step-time-input').addEventListener('input', (e) => { step.time = e.target.value; updateDocPreview(); });
+        card.querySelector('.step-teacher-input').addEventListener('input', (e) => { step.teacherRole = e.target.value; updateDocPreview(); });
+        card.querySelector('.step-student-input').addEventListener('input', (e) => { step.studentRole = e.target.value; updateDocPreview(); });
+        card.querySelector('.step-strategy-input').addEventListener('input', (e) => { step.strategy = e.target.value; updateDocPreview(); });
+        card.querySelector('.step-assessment-input').addEventListener('input', (e) => { step.assessment = e.target.value; updateDocPreview(); });
 
-        card.querySelector('.remove-step-btn').addEventListener('click', () => {
+        card.querySelector('.delete-step-btn').addEventListener('click', () => {
+          const lesson = getActiveLesson();
           lesson.steps.splice(index, 1);
-          renderStepsInputs();
-          updateLivePreview();
+          renderStepsInputs(lesson.steps);
+          updateDocPreview();
         });
 
         container.appendChild(card);
       });
     }
 
-    function updateLivePreview() {
+    function updateDocPreview() {
       const lesson = getActiveLesson();
-      if (!lesson) return;
 
-      // Update Meta
+      // Top Header
       document.getElementById('docSchoolHeader').innerText = lesson.school || 'المدرسة النموذجية';
-      document.getElementById('docDateHeader').innerText = `التاريخ: ${lesson.date || '-'}`;
       document.getElementById('docTopic').innerText = lesson.topic || 'بدون عنوان';
       document.getElementById('docSubject').innerText = lesson.subject || '-';
       document.getElementById('docGrade').innerText = lesson.grade || '-';
@@ -822,194 +1009,73 @@
       document.getElementById('docHomework').innerText = lesson.homework || '-';
       document.getElementById('docReflection').innerText = lesson.reflection || '-';
 
-      // Update Objectives List
-      const objContainer = document.getElementById('docObjectivesList');
-      objContainer.innerHTML = '';
-      if (!lesson.objectives || lesson.objectives.length === 0) {
-        objContainer.innerHTML = '<li class="text-slate-400">لم يتم تحديد أهداف بعد.</li>';
-      } else {
-        lesson.objectives.forEach(obj => {
+      // Objectives List
+      const objList = document.getElementById('docObjectivesList');
+      objList.innerHTML = '';
+      if (lesson.objectives && lesson.objectives.length > 0) {
+        lesson.objectives.forEach(o => {
           const li = document.createElement('li');
-          li.innerHTML = `<strong>[${escapeHtml(obj.type)}]:</strong> ${escapeHtml(obj.text)}`;
-          objContainer.appendChild(li);
+          li.innerHTML = `<span class="font-bold text-slate-900">[${escapeHtml(o.type)}]:</span> ${escapeHtml(o.text)}`;
+          objList.appendChild(li);
         });
+      } else {
+        objList.innerHTML = '<li class="text-slate-400 italic">لم يتم إدخال أهداف بعد.</li>';
       }
 
-      // Update Steps Table
-      const stepsContainer = document.getElementById('docStepsTableBody');
-      stepsContainer.innerHTML = '';
-      if (!lesson.steps || lesson.steps.length === 0) {
-        stepsContainer.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد مراحل مسجلة.</td></tr>';
-      } else {
-        lesson.steps.forEach(st => {
+      // Steps Table
+      const tableBody = document.getElementById('docStepsTableBody');
+      tableBody.innerHTML = '';
+      if (lesson.steps && lesson.steps.length > 0) {
+        lesson.steps.forEach(s => {
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-slate-50';
           tr.innerHTML = `
-            <td class="p-2 border-l border-slate-200 font-bold bg-slate-50/50">
-              <span class="block text-slate-900">${escapeHtml(st.stage)}</span>
-              <span class="text-[10px] text-slate-500 font-normal">(${escapeHtml(st.time)})</span>
+            <td class="p-1.5 border-l border-slate-300 font-bold bg-slate-50/70 align-top">
+              <div>${escapeHtml(s.stage)}</div>
+              <span class="text-[10px] text-brand-700 font-normal">(${escapeHtml(s.time)})</span>
             </td>
-            <td class="p-2 border-l border-slate-200 text-slate-800 leading-relaxed">${escapeHtml(st.teacherRole)}</td>
-            <td class="p-2 border-l border-slate-200 text-slate-800 leading-relaxed">${escapeHtml(st.studentRole)}</td>
-            <td class="p-2 text-slate-800">
-              <div class="mb-1"><span class="font-bold text-slate-900">الاستراتيجية:</span> ${escapeHtml(st.strategy)}</div>
-              <div><span class="font-bold text-slate-900">التقويم:</span> ${escapeHtml(st.assessment)}</div>
+            <td class="p-1.5 border-l border-slate-300 text-slate-800 align-top">${escapeHtml(s.teacherRole)}</td>
+            <td class="p-1.5 border-l border-slate-300 text-slate-800 align-top">${escapeHtml(s.studentRole)}</td>
+            <td class="p-1.5 text-slate-800 align-top">
+              <div class="font-semibold text-slate-900">${escapeHtml(s.strategy)}</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(s.assessment)}</div>
             </td>
           `;
-          stepsContainer.appendChild(tr);
+          tableBody.appendChild(tr);
         });
+      } else {
+        tableBody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد مراحل مسجلة.</td></tr>`;
       }
     }
 
-    function renderTabs() {
-      const container = document.getElementById('lessonsTabsContainer');
-      container.innerHTML = '';
-
-      state.lessons.forEach((lesson, index) => {
-        const isActive = lesson.id === state.activeLessonId;
-        const btn = document.createElement('div');
-        btn.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition select-none ${
-          isActive 
-            ? 'bg-white text-brand-700 shadow-sm border border-slate-200' 
-            : 'bg-transparent text-slate-600 hover:bg-slate-200/60'
-        }`;
-
-        const shortTitle = lesson.topic ? (lesson.topic.length > 18 ? lesson.topic.substring(0, 18) + '...' : lesson.topic) : `درس ${index + 1}`;
-        btn.innerHTML = `
-          <i class="fa-solid fa-file-lines text-xs ${isActive ? 'text-brand-600' : 'text-slate-400'}"></i>
-          <span>${escapeHtml(shortTitle)}</span>
-          ${state.lessons.length > 1 ? `
-            <button class="delete-tab-btn ml-1 text-slate-400 hover:text-rose-500 p-0.5 rounded transition">
-              <i class="fa-solid fa-xmark text-[10px]"></i>
-            </button>
-          ` : ''}
-        `;
-
-        btn.addEventListener('click', (e) => {
-          if (e.target.closest('.delete-tab-btn')) {
-            deleteLesson(lesson.id);
-            return;
-          }
-          state.activeLessonId = lesson.id;
-          renderTabs();
-          populateForm();
-        });
-
-        container.appendChild(btn);
-      });
-    }
-
-    function createNewLesson(customData = null) {
-      const newIndex = state.lessons.length + 1;
-      const newLesson = customData || {
-        id: "lesson-" + Date.now(),
-        topic: `درس جديد (${newIndex})`,
-        subject: "المادة الدراسية",
-        grade: "الصف الدراسي",
-        unit: "الوحدة",
-        date: new Date().toISOString().split('T')[0],
-        duration: "45 دقيقة",
-        teacher: document.getElementById('fieldTeacher').value || "أ. المعلم/ة",
-        school: document.getElementById('fieldSchool').value || "المدرسة النموذجية",
-        aids: "كتاب المادة، السبورة",
-        digitalResources: "عرض تقديمي تفاعلي",
-        remedial: "أنشطة تبسيطية للمفاهيم الأساسية",
-        enrichment: "أسئلة مهارات التفكير العليا",
-        homework: "تطبيق تدريبات الدرس",
-        reflection: "",
-        objectives: [
-          { type: "معرفي", text: "أن يتعرف الطالب على المفاهيم الأساسية للدرس بدقة." },
-          { type: "مهاري", text: "أن يطبق الطالب الخطوات العملية بطريقة صحيحة." }
-        ],
-        steps: [
-          {
-            stage: "التهيئة والتمهيد",
-            time: "5 د",
-            teacherRole: "طرح سؤال حافز وجذب انتباه الطلاب للموضوع.",
-            studentRole: "المشاركة والتفاعل وإبداء الرأي.",
-            strategy: "العصف الذهني",
-            assessment: "تقويم تشخيصي"
-          },
-          {
-            stage: "التدريس والأنشطة",
-            time: "25 د",
-            teacherRole: "شرح المحتوى وإجراء تدريبات ونمذجة الحل.",
-            studentRole: "التطبيق والمشاركة في مجموعات العمل.",
-            strategy: "التعلم التعاوني",
-            assessment: "تقويم تكويني"
-          },
-          {
-            stage: "التقويم الختامي",
-            time: "15 د",
-            teacherRole: "طرح تمرين فردي واستخلاص ما تعلمه الطلاب.",
-            studentRole: "حل التطبيق الفردي وتلخيص الأفكار.",
-            strategy: "التفكير المستقل وتذكرة الخروج",
-            assessment: "تقويم ختامي"
-          }
-        ]
-      };
-
-      state.lessons.push(newLesson);
-      state.activeLessonId = newLesson.id;
-      renderTabs();
-      populateForm();
-      showToast('تم إنشاء خطة درس جديدة بنجاح', 'success');
-    }
-
-    function deleteLesson(id) {
-      if (state.lessons.length <= 1) {
-        showToast('يجب الاحتفاظ بخطة درس واحدة على الأقل!', 'warning');
-        return;
-      }
-      state.lessons = state.lessons.filter(l => l.id !== id);
-      if (state.activeLessonId === id) {
-        state.activeLessonId = state.lessons[0].id;
-      }
-      renderTabs();
-      populateForm();
-      showToast('تم حذف الخطة المحددة', 'info');
-    }
-
-    async function generateLessonWithAI() {
+    async function executeAiGeneration() {
       const topic = document.getElementById('aiTopicInput').value.trim();
       const subject = document.getElementById('aiSubjectInput').value.trim();
       const grade = document.getElementById('aiGradeInput').value.trim();
       const notes = document.getElementById('aiNotesInput').value.trim();
-      const customKey = document.getElementById('customApiKeyInput').value.trim();
 
       if (!topic) {
-        showToast('يرجى إدخال عنوان أو موضوع الدرس أولاً!', 'warning');
+        showToast('يرجى إدخال عنوان أو موضوع الدرس', 'warning');
         return;
       }
 
       const executeBtn = document.getElementById('executeAiBtn');
-      const loadingOverlay = document.getElementById('aiLoadingOverlay');
+      const loader = document.getElementById('aiLoadingIndicator');
       executeBtn.disabled = true;
-      loadingOverlay.classList.remove('hidden');
+      loader.classList.remove('hidden');
 
-      const systemPrompt = `أنت خبير تربوي ومستشار مناهج تعليمية محترف. 
-مهمتك إعداد خطة درس نموذجية متكاملة وقابلة للتطبيق الصفي الفوري وفق أحدث استراتيجيات التدريس ونماذج نواتج التعلم (SMART) باللغة العربية الفصحى السليمة.
-أخرج النتيجة بتنسيق JSON مطابق تماماً للهيكل المطلوب.`;
+      const systemPrompt = `أنت موجه تربوي وخبير في المناهج التعليمية وتصميم خطط الدروس الحديثة.
+قم بإنشاء خطة درس متكاملة باللغة العربية الفصحى وفق نموذج SMART. أخرج النتيجة بتنسيق JSON حصرياً.`;
 
-      const userPrompt = `قم بإعداد خطة درس نموذجية ومكتملة للتفاصيل التالية:
-- الموضوع: ${topic}
+      const userPrompt = `أنشئ خطة درس مكتملة:
+- موضوع الدرس: ${topic}
 ${subject ? `- المادة: ${subject}` : ''}
-${grade ? `- الصف المستهدف: ${grade}` : ''}
-${notes ? `- متطلبات إضافية: ${notes}` : ''}
-
-يجب أن تتضمن الخطة:
-1. صياغة دقيقة لـ 3 أهداف سلوكية مصنفة (معرفي، مهاري، وجداني).
-2. الوسائل المحسوسة والمصادر الرقمية المناسبة.
-3. 4 مراحل لسير الحصة (التهيئة، العرض والنمذجة، التعلم التعاوني، التقويم الختامي والغلق) مع تحديد زمن ودور المعلم والطالب والاستراتيجية والتقويم لكل مرحلة.
-4. أنشطة التمايز (علاجي للمتعثرين، وإثرائي للمتميزين)، واجب منزلي، وتأمل ذاتي مقترح للمعلم.`;
+${grade ? `- الصف: ${grade}` : ''}
+${notes ? `- ملاحظات: ${notes}` : ''}`;
 
       const payload = {
-        contents: [
-          { role: "user", parts: [{ text: userPrompt }] }
-        ],
-        systemInstruction: {
-          parts: [{ text: systemPrompt }]
-        },
+        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -1053,20 +1119,18 @@ ${notes ? `- متطلبات إضافية: ${notes}` : ''}
                 }
               }
             },
-            required: ["topic", "subject", "grade", "objectives", "steps"]
+            required: ["topic", "subject", "objectives", "steps"]
           }
         }
       };
 
-      const apiKey = customKey || "";
+      const apiKey = "";
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
       try {
         let response = null;
-        let retries = 3;
         let delay = 1000;
-
-        for (let i = 0; i < retries; i++) {
+        for (let i = 0; i < 3; i++) {
           try {
             response = await fetch(apiUrl, {
               method: 'POST',
@@ -1074,196 +1138,178 @@ ${notes ? `- متطلبات إضافية: ${notes}` : ''}
               body: JSON.stringify(payload)
             });
             if (response.ok) break;
-          } catch (err) {
-            if (i === retries - 1) throw err;
+          } catch (e) {
+            if (i === 2) throw e;
           }
           await new Promise(r => setTimeout(r, delay));
           delay *= 2;
         }
 
         if (!response || !response.ok) {
-          throw new Error('فشل الاتصال بخدمة الذكاء الاصطناعي');
+          throw new Error('تعذر الوصول لخدمة الذكاء الاصطناعي');
         }
 
-        const result = await response.json();
-        const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (!jsonText) {
-          throw new Error('لم يتم استلام نص صالح من النموذج');
-        }
+        const data = await response.json();
+        const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const parsed = JSON.parse(jsonText);
 
-        const parsedData = JSON.parse(jsonText);
-
-        // Apply generated data into active or new lesson
-        const activeLesson = getActiveLesson();
-        activeLesson.topic = parsedData.topic || topic;
-        if (parsedData.subject) activeLesson.subject = parsedData.subject;
-        if (parsedData.grade) activeLesson.grade = parsedData.grade;
-        if (parsedData.unit) activeLesson.unit = parsedData.unit;
-        if (parsedData.duration) activeLesson.duration = parsedData.duration;
-        if (parsedData.aids) activeLesson.aids = parsedData.aids;
-        if (parsedData.digitalResources) activeLesson.digitalResources = parsedData.digitalResources;
-        if (parsedData.remedial) activeLesson.remedial = parsedData.remedial;
-        if (parsedData.enrichment) activeLesson.enrichment = parsedData.enrichment;
-        if (parsedData.homework) activeLesson.homework = parsedData.homework;
-        if (parsedData.reflection) activeLesson.reflection = parsedData.reflection;
-        if (parsedData.objectives && parsedData.objectives.length > 0) activeLesson.objectives = parsedData.objectives;
-        if (parsedData.steps && parsedData.steps.length > 0) activeLesson.steps = parsedData.steps;
+        const currentLesson = getActiveLesson();
+        if (parsed.topic) currentLesson.topic = parsed.topic;
+        if (parsed.subject) currentLesson.subject = parsed.subject;
+        if (parsed.grade) currentLesson.grade = parsed.grade;
+        if (parsed.unit) currentLesson.unit = parsed.unit;
+        if (parsed.duration) currentLesson.duration = parsed.duration;
+        if (parsed.aids) currentLesson.aids = parsed.aids;
+        if (parsed.digitalResources) currentLesson.digitalResources = parsed.digitalResources;
+        if (parsed.remedial) currentLesson.remedial = parsed.remedial;
+        if (parsed.enrichment) currentLesson.enrichment = parsed.enrichment;
+        if (parsed.homework) currentLesson.homework = parsed.homework;
+        if (parsed.reflection) currentLesson.reflection = parsed.reflection;
+        if (parsed.objectives && parsed.objectives.length) currentLesson.objectives = parsed.objectives;
+        if (parsed.steps && parsed.steps.length) currentLesson.steps = parsed.steps;
 
         populateForm();
         renderTabs();
         document.getElementById('aiModal').classList.add('hidden');
-        showToast('تم توليد خطة الدرس بالذكاء الاصطناعي بنجاح!', 'success');
+        showToast('تم إنشاء خطة الدرس بنجاح بواسطة الذكاء الاصطناعي!', 'success');
 
-      } catch (error) {
-        showToast('حدث خطأ أثناء التوليد: ' + (error.message || 'يرجى المحاولة ثانية'), 'error');
+        // On mobile, automatically show the preview to view the result
+        if (window.innerWidth < 1024) {
+          setViewMode('preview');
+        }
+
+      } catch (err) {
+        showToast('حدث خطأ أثناء التوليد: ' + err.message, 'error');
       } finally {
         executeBtn.disabled = false;
-        loadingOverlay.classList.add('hidden');
-      }
-    }
-
-    function exportToPdf() {
-      // Open the browser print dialog optimized with @media print stylesheet
-      // This produces 100% crisp vector Arabic PDF without blurry canvas issues
-      window.print();
-    }
-
-    function escapeHtml(string) {
-      if (!string) return '';
-      return String(string)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    // View switcher handler for desktop and tablets
-    function setViewMode(mode) {
-      state.viewMode = mode;
-      const editorPanel = document.getElementById('editorPanel');
-      const previewPanel = document.getElementById('previewPanel');
-      const splitBtn = document.getElementById('viewSplitBtn');
-      const editBtn = document.getElementById('viewEditorBtn');
-      const prevBtn = document.getElementById('viewPreviewBtn');
-
-      [splitBtn, editBtn, prevBtn].forEach(b => {
-        b.className = 'px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all';
-      });
-
-      if (mode === 'split') {
-        splitBtn.className = 'px-3 py-1.5 rounded-lg bg-white shadow-xs text-brand-600 font-bold transition-all';
-        editorPanel.classList.remove('hidden', 'w-full');
-        editorPanel.classList.add('w-full', 'lg:w-1/2');
-        previewPanel.classList.remove('hidden', 'w-full');
-        previewPanel.classList.add('w-full', 'lg:w-1/2');
-      } else if (mode === 'editor') {
-        editBtn.className = 'px-3 py-1.5 rounded-lg bg-white shadow-xs text-brand-600 font-bold transition-all';
-        editorPanel.classList.remove('hidden', 'lg:w-1/2');
-        editorPanel.classList.add('w-full');
-        previewPanel.classList.add('hidden');
-      } else if (mode === 'preview') {
-        prevBtn.className = 'px-3 py-1.5 rounded-lg bg-white shadow-xs text-brand-600 font-bold transition-all';
-        editorPanel.classList.add('hidden');
-        previewPanel.classList.remove('hidden', 'lg:w-1/2');
-        previewPanel.classList.add('w-full');
+        loader.classList.add('hidden');
       }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      // Initial render
+      // Initialize view mode
+      if (window.innerWidth < 1024) {
+        setViewMode('editor');
+      } else {
+        setViewMode('split');
+      }
+
+      // Initial populate
       renderTabs();
       populateForm();
 
-      // Form input bindings
-      const inputFields = [
-        'fieldTopic', 'fieldSubject', 'fieldGrade', 'fieldUnit', 
-        'fieldDate', 'fieldDuration', 'fieldTeacher', 'fieldSchool',
-        'fieldAids', 'fieldDigitalResources', 'fieldRemedial', 
-        'fieldEnrichment', 'fieldHomework', 'fieldReflection'
+      // Field Event Bindings
+      const inputIds = [
+        'fieldTopic', 'fieldSubject', 'fieldGrade', 'fieldUnit', 'fieldDuration',
+        'fieldDate', 'fieldTeacher', 'fieldSchool', 'fieldAids', 'fieldDigitalResources',
+        'fieldRemedial', 'fieldEnrichment', 'fieldHomework', 'fieldReflection'
       ];
-      inputFields.forEach(id => {
+
+      inputIds.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener('input', syncFormToState);
+        if (el) {
+          el.addEventListener('input', (e) => {
+            const key = id.replace('field', '');
+            const normalizedKey = key.charAt(0).toLowerCase() + key.slice(1);
+            getActiveLesson()[normalizedKey] = e.target.value;
+            if (id === 'fieldTopic') renderTabs();
+            updateDocPreview();
+          });
+        }
       });
 
-      // Add Objective Button
+      // Objectives & Steps Add Buttons
       document.getElementById('addObjectiveBtn').addEventListener('click', () => {
         const lesson = getActiveLesson();
         lesson.objectives.push({ type: 'معرفي', text: '' });
-        renderObjectivesInputs();
-        updateLivePreview();
+        renderObjectivesInputs(lesson.objectives);
       });
 
-      // Add Step Button
       document.getElementById('addStepBtn').addEventListener('click', () => {
         const lesson = getActiveLesson();
         lesson.steps.push({
-          stage: 'نشاط إضافي',
+          stage: 'مرحلة جديدة',
           time: '10 د',
           teacherRole: '',
           studentRole: '',
-          strategy: 'مناقشة وحوار',
-          assessment: 'تقويم تكويني'
+          strategy: '',
+          assessment: ''
         });
-        renderStepsInputs();
-        updateLivePreview();
+        renderStepsInputs(lesson.steps);
       });
 
-      // Tab Management Buttons
+      // Multi-lesson Buttons
       document.getElementById('addNewLessonBtn').addEventListener('click', () => createNewLesson());
       document.getElementById('loadSampleBtn').addEventListener('click', () => {
-        const activeLesson = getActiveLesson();
-        Object.assign(activeLesson, JSON.parse(JSON.stringify(sampleLessonTemplate)));
-        populateForm();
+        state.lessons = [JSON.parse(JSON.stringify(initialLesson))];
+        state.activeLessonId = initialLesson.id;
         renderTabs();
-        showToast('تم تحميل نموذج الدرس التجريبي', 'success');
+        populateForm();
+        showToast('تم تحميل النموذج التجريبي', 'success');
       });
-
       document.getElementById('resetLessonBtn').addEventListener('click', () => {
-        const activeLesson = getActiveLesson();
-        activeLesson.topic = '';
-        activeLesson.aids = '';
-        activeLesson.digitalResources = '';
-        activeLesson.remedial = '';
-        activeLesson.enrichment = '';
-        activeLesson.homework = '';
-        activeLesson.reflection = '';
-        activeLesson.objectives = [{ type: 'معرفي', text: '' }];
-        activeLesson.steps = [];
+        const current = getActiveLesson();
+        current.topic = '';
+        current.objectives = [{ type: 'معرفي', text: '' }];
+        current.steps = [];
         populateForm();
         renderTabs();
-        showToast('تم إفراغ محتويات الدرس الحالي', 'info');
+        showToast('تم تفريغ محتويات الدرس الحالي', 'info');
       });
 
-      // Print PDF Button
-      document.getElementById('printPdfBtn').addEventListener('click', exportToPdf);
-
-      // View Mode Buttons
-      document.getElementById('viewSplitBtn').addEventListener('click', () => setViewMode('split'));
-      document.getElementById('viewEditorBtn').addEventListener('click', () => setViewMode('editor'));
-      document.getElementById('viewPreviewBtn').addEventListener('click', () => setViewMode('preview'));
+      // Mobile Navigation Buttons
+      document.getElementById('mobileToggleEditBtn').addEventListener('click', () => setViewMode('editor'));
+      document.getElementById('mobileTogglePreviewBtn').addEventListener('click', () => setViewMode('preview'));
+      document.getElementById('navBtnEditor').addEventListener('click', () => setViewMode('editor'));
+      document.getElementById('navBtnPreview').addEventListener('click', () => setViewMode('preview'));
 
       // AI Modal Triggers
-      const aiModal = document.getElementById('aiModal');
-      document.getElementById('openAiModalBtn').addEventListener('click', () => {
-        const activeLesson = getActiveLesson();
-        document.getElementById('aiTopicInput').value = activeLesson.topic || '';
-        document.getElementById('aiSubjectInput').value = activeLesson.subject || '';
-        document.getElementById('aiGradeInput').value = activeLesson.grade || '';
-        aiModal.classList.remove('hidden');
+      const openAi = () => {
+        const lesson = getActiveLesson();
+        document.getElementById('aiTopicInput').value = lesson.topic || '';
+        document.getElementById('aiSubjectInput').value = lesson.subject || '';
+        document.getElementById('aiGradeInput').value = lesson.grade || '';
+        document.getElementById('aiModal').classList.remove('hidden');
+      };
+
+      document.getElementById('openAiModalBtn').addEventListener('click', openAi);
+      document.getElementById('navBtnAi').addEventListener('click', openAi);
+      document.getElementById('closeAiModalBtn').addEventListener('click', () => {
+        document.getElementById('aiModal').classList.add('hidden');
       });
+      document.getElementById('cancelAiBtn').addEventListener('click', () => {
+        document.getElementById('aiModal').classList.add('hidden');
+      });
+      document.getElementById('executeAiBtn').addEventListener('click', executeAiGeneration);
 
-      document.getElementById('closeAiModalBtn').addEventListener('click', () => aiModal.classList.add('hidden'));
-      document.getElementById('cancelAiBtn').addEventListener('click', () => aiModal.classList.add('hidden'));
-      document.getElementById('executeAiBtn').addEventListener('click', generateLessonWithAI);
+      // Print / PDF Triggers
+      const handlePrint = () => {
+        // Ensure preview elements are active for printing
+        updateDocPreview();
+        window.print();
+      };
+      document.getElementById('topPrintBtn').addEventListener('click', handlePrint);
+      document.getElementById('navBtnPrint').addEventListener('click', handlePrint);
 
-      // Keyboard shortcuts (Ctrl+P to print)
-      window.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-          e.preventDefault();
-          exportToPdf();
+      // Desktop Mode Buttons
+      document.getElementById('desktopSplitBtn').addEventListener('click', () => setViewMode('split'));
+      document.getElementById('desktopEditBtn').addEventListener('click', () => setViewMode('editor'));
+      document.getElementById('desktopPreviewBtn').addEventListener('click', () => setViewMode('preview'));
+
+      // Zoom Controls
+      document.getElementById('zoomInBtn').addEventListener('click', () => setZoom(state.zoomLevel + 0.1));
+      document.getElementById('zoomOutBtn').addEventListener('click', () => setZoom(state.zoomLevel - 0.1));
+      document.getElementById('zoomFitMobileBtn').addEventListener('click', fitToScreen);
+
+      // Dynamic resize handler
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024 && state.viewMode !== 'split') {
+          setViewMode('split');
+        } else if (window.innerWidth < 1024 && state.viewMode === 'split') {
+          setViewMode('editor');
+        }
+        if (state.viewMode === 'preview' || state.viewMode === 'split') {
+          fitToScreen();
         }
       });
     });
